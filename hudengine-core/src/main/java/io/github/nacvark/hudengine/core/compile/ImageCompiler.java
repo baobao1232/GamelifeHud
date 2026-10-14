@@ -127,6 +127,30 @@ public final class ImageCompiler {
         return out;
     }
 
+    /**
+     * Như {@link #listenerFrames}, nhưng ascent thật thay vì ascent mã hóa. Dùng cho thanh gắn trên
+     * thực thể, nơi không có shader nào đưa glyph về chỗ cũ. Provider bitmap yêu cầu ascent <= height.
+     */
+    public List<Glyph> plainFrames(Model.ImageDef def) {
+        BufferedImage source = source(def.file());
+        int height = Math.max(1, (int) Math.round(source.getHeight() * def.scale()));
+        boolean fromRight = "right".equalsIgnoreCase(def.splitType());
+
+        List<Glyph> frames = new ArrayList<>(def.split());
+        for (int i = 1; i <= def.split(); i++) {
+            int width = Math.max(1, (int) Math.floor(source.getWidth() * (long) i / (double) def.split()));
+            int x = fromRight ? source.getWidth() - width : 0;
+            BufferedImage frame = crop(source, x, 0, width, source.getHeight());
+
+            String texture = pack.addTexture("mobbar_" + def.key() + "_" + i + ".png", frame);
+            int cp = pool.next();
+            pack.addProvider(fontName, PackBuilder.bitmap(texture, height, height,
+                List.of(Encoding.CharPool.str(cp))));
+            frames.add(new Glyph(cp, advance(width, source.getHeight(), height)));
+        }
+        return frames;
+    }
+
     /** Slices a bar into {@code split} fill steps. Step zero is not generated: it is the empty bar. */
     public List<Glyph> listenerFrames(Model.ImageDef def, int stateId, int y) {
         BufferedImage source = source(def.file());

@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Locale;
+import org.bukkit.entity.EntityType;
 
 /**
  * Plugin entry point.
@@ -41,7 +43,8 @@ public final class HudEnginePlugin extends JavaPlugin {
     private SkinFaces skins;
     private HudService service;
     private PackDelivery delivery;
-
+    private MobBarService mobBarService;
+    private HudPackCompiler.MobBars lastMobBars;
     /** Where the last successful compile wrote the pack, so delivery can pick it up after a reload. */
     private Path lastPack;
 
@@ -107,6 +110,9 @@ public final class HudEnginePlugin extends JavaPlugin {
                 getConfig().getInt("huds.tick-period", 2),
                 getConfig().getBoolean("huds.disable-for-bedrock", true));
         service.start();
+        mobBarService = new MobBarService(this, log);
+        mobBarService.start();
+        applyMobBars();
 
         delivery = PackDelivery.create(this, log, messages, getConfig());
         if (delivery != null) {
@@ -143,6 +149,9 @@ public final class HudEnginePlugin extends JavaPlugin {
         }
         if (skins != null) {
             skins.shutdown();
+        }
+        if (mobBarService != null) {
+            mobBarService.stop();
         }
     }
 
@@ -187,6 +196,7 @@ public final class HudEnginePlugin extends JavaPlugin {
                 return List.of(messages.prefixed("command.reloaded"));
             }
             service.swap(pack, defaultHuds(pack));
+            applyMobBars();
             if (delivery != null) {
                 // Re-hash before anyone can be sent the new file; a stale hash makes every client
                 // re-download on every join.
@@ -245,6 +255,7 @@ public final class HudEnginePlugin extends JavaPlugin {
         // a half-written pack.
         Files.move(staging, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         lastPack = target;
+        lastMobBars = result.mobBars();
 
         log.info(messages.plain("console.compiled",
                 "ms", (System.nanoTime() - start) / 1_000_000,
@@ -334,5 +345,40 @@ public final class HudEnginePlugin extends JavaPlugin {
             }
         }
         return known;
+    }
+
+    private void applyMobBars() {
+        if (mobBarService == null) {
+            return;
+        }
+        ConfigurationSection section = getConfig().getConfigurationSection("mob-bars");
+        if (section == null || !section.getBoolean("enabled", true)) {
+            mobBarService.configure(null, null, null);
+            return;
+        }
+        Set<EntityType> blacklist = EnumSet.noneOf(EntityType.class);
+        for (String name : section.getStringList("blacklist")) {
+            try {
+                blacklist.add(EntityType.valueOf(name.strip().toUpperCase(Locale.ROOT)));
+            } catch (IllegalArgumentException e) {
+                log.warn(messages.plain("console.mob-bar-bad-type", "type", name));
+            }
+        }
+
+        String bar = section.getString("bar", "health");
+        HudPackCompiler.MobBars pack = lastMobBars;
+        boolean haveAny = pack != null && !pack.bars().isEmpty();
+        if (haveAny && !pack.bars().containsKey(bar)) {
+            log.warn(messages.plain("console.mob-bar-unknown",
+                "bar", bar, "known", String.join(", ", pack.bars().keySet())));
+        }
+        // Không có mobbars/ hoặc bar sai tên: configure tự rơi về chế độ chữ.
+        mobBarService.configure(pack, bar, new MobBarService.Settings(
+            section.getBoolean("mobs", true),
+            section.getBoolean("players", true),
+            Math.max(1, section.getInt("show-seconds", 3) * 20),
+            blacklist,
+            section.getBoolean("look", true),
+            section.getBoolean("text-only", false)));
     }
 }

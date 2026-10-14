@@ -43,6 +43,19 @@ public final class HudPackCompiler {
     private static final String HUD_FONT = "hud";
     private static final String SPACE_FONT = "space";
 
+    private static final String MOB_BAR_FONT = "mobbar";
+
+    public record MobBarGlyphs(List<Compiled.Glyph> frames, double scale, double offset) {
+    }
+
+    /** @param font full font name, for example {@code hudengine:mobbar} */
+    public record MobBars(String font, Map<String, MobBarGlyphs> bars) {
+    }
+
+    public record Result(Compiled.Pack pack, Map<String, Object> manifest, List<String> report,
+                         MobBars mobBars) {
+    }
+
     /**
      * @param bossBarColor which boss bar colour the HUD claims; the pack replaces that colour's
      *                     sprites with transparent ones, so the bar itself is invisible while its
@@ -59,31 +72,31 @@ public final class HudPackCompiler {
      *                      above it
      */
     public record Options(
-            String namespace,
-            String bossBarColor,
-            String packDescription,
-            int minPackFormat,
-            int maxPackFormat,
-            String extraChars,
-            Set<VanillaHud> hiddenVanilla,
-            int bossBarLine
+        String namespace,
+        String bossBarColor,
+        String packDescription,
+        int minPackFormat,
+        int maxPackFormat,
+        String extraChars,
+        Set<VanillaHud> hiddenVanilla,
+        int bossBarLine
     ) {
         public Options {
             if (minPackFormat > maxPackFormat) {
                 throw new IllegalArgumentException(
-                        "min pack format " + minPackFormat + " is above max " + maxPackFormat);
+                    "min pack format " + minPackFormat + " is above max " + maxPackFormat);
             }
             if (bossBarLine < 1 || bossBarLine > Encoding.MAX_BOSS_BAR_LINE) {
                 throw new IllegalArgumentException("boss bar line " + bossBarLine
-                        + " is outside 1.." + Encoding.MAX_BOSS_BAR_LINE);
+                    + " is outside 1.." + Encoding.MAX_BOSS_BAR_LINE);
             }
             hiddenVanilla = hiddenVanilla == null ? Set.of() : Set.copyOf(hiddenVanilla);
         }
 
         public static Options defaults() {
             return new Options("hudengine", "yellow", "HUDEngine resource pack",
-                    ShaderDialect.MIN_PACK_FORMAT, ShaderDialect.MAX_PACK_FORMAT, "",
-                    Set.of(), 1);
+                ShaderDialect.MIN_PACK_FORMAT, ShaderDialect.MAX_PACK_FORMAT, "",
+                Set.of(), 1);
         }
 
         /** Baseline the generated shader draws the HUD from. */
@@ -109,13 +122,13 @@ public final class HudPackCompiler {
      *                subdirectory of the config folder layered over the bundled copy
      */
     public record Request(
-            Path configFolder,
-            Path outDir,
-            Path outZip,
-            Path outManifest,
-            Options options,
-            VanillaGlyphSource vanilla,
-            EngineLogger log
+        Path configFolder,
+        Path outDir,
+        Path outZip,
+        Path outManifest,
+        Options options,
+        VanillaGlyphSource vanilla,
+        EngineLogger log
     ) {
         public Request {
             if (configFolder == null) {
@@ -131,13 +144,10 @@ public final class HudPackCompiler {
                 // A vanilla folder next to the configs wins file by file; anything it does not
                 // provide falls back to the copy bundled in the jar.
                 vanilla = VanillaGlyphSource.layered(
-                        VanillaGlyphSource.ofDirectory(configFolder.resolve("vanilla")),
-                        VanillaGlyphSource.bundled());
+                    VanillaGlyphSource.ofDirectory(configFolder.resolve("vanilla")),
+                    VanillaGlyphSource.bundled());
             }
         }
-    }
-
-    public record Result(Compiled.Pack pack, Map<String, Object> manifest, List<String> report) {
     }
 
     public static Result compile(Request request) throws IOException {
@@ -154,7 +164,7 @@ public final class HudPackCompiler {
         ImageCompiler images = new ImageCompiler(model, pack, pool, HUD_FONT, log);
         CompassCompiler compasses = new CompassCompiler(model, pack, pool, HUD_FONT, log);
         TextCompiler texts = new TextCompiler(model, pack, pool, HUD_FONT,
-                options.extraChars(), request.vanilla(), log);
+            options.extraChars(), request.vanilla(), log);
 
         Map<String, Compiled.Hud> huds = new LinkedHashMap<>();
         for (Model.HudDef hud : model.huds().values()) {
@@ -163,11 +173,20 @@ public final class HudPackCompiler {
                 Model.LayoutDef layout = model.layouts().get(ref.layoutName());
                 if (layout == null) {
                     throw new IllegalStateException("layout not found: " + ref.layoutName()
-                            + " (referenced by hud " + hud.key() + ")");
+                        + " (referenced by hud " + hud.key() + ")");
                 }
                 compileLayout(ref, layout, model, states, images, compasses, texts, elements);
             }
             huds.put(hud.key(), new Compiled.Hud(hud.key(), elements));
+        }
+
+        // Mob bars live in their own font with real ascents, so the shader leaves them alone.
+        ImageCompiler mobImages = new ImageCompiler(model, pack, pool, MOB_BAR_FONT, log);
+        Map<String, MobBarGlyphs> mobBars = new LinkedHashMap<>();
+        for (Model.MobBarDef def : model.mobBars().values()) {
+            Model.ImageDef image = model.images().get(def.image());
+            mobBars.put(def.key(), new MobBarGlyphs(
+                toGlyphs(mobImages.plainFrames(image)), def.scale(), def.offset()));
         }
 
         writeSpaceFonts(pack);
@@ -175,9 +194,9 @@ public final class HudPackCompiler {
         pack.write(request.outDir(), request.outZip());
 
         Compiled.Pack compiled = new Compiled.Pack(
-                options.namespace(), pack.fontId(HUD_FONT), pack.fontId(SPACE_FONT),
-                Encoding.SPACE_BASE, Encoding.SPACE_RANGE, options.bossBarColor(),
-                buildStates(states), huds);
+            options.namespace(), pack.fontId(HUD_FONT), pack.fontId(SPACE_FONT),
+            Encoding.SPACE_BASE, Encoding.SPACE_RANGE, options.bossBarColor(),
+            buildStates(states), huds);
 
         Map<String, Object> manifest = toManifest(compiled);
         if (request.outManifest() != null) {
@@ -189,13 +208,13 @@ public final class HudPackCompiler {
         report.add("huds: " + huds.size());
         if (!options.hiddenVanilla().isEmpty()) {
             report.add("hidden vanilla elements: " + options.hiddenVanilla().stream()
-                    .map(VanillaHud::configName).sorted().collect(Collectors.joining(", ")));
+                .map(VanillaHud::configName).sorted().collect(Collectors.joining(", ")));
         }
         report.add("pack formats " + options.minPackFormat() + ".." + options.maxPackFormat()
-                + ", shader dialects: " + dialectSummary(options));
+            + ", shader dialects: " + dialectSummary(options));
         for (TextCompiler.GlyphSources font : texts.glyphSources()) {
             report.add(String.format("font %-24s vanilla=%d overrides=%d file=%d unavailable=%d",
-                    font.font(), font.fromVanilla(), font.fromOverrides(), font.fromFont(), font.missing()));
+                font.font(), font.fromVanilla(), font.fromOverrides(), font.fromFont(), font.missing()));
             if (font.fromFont() == 0 && font.fromVanilla() > 0) {
                 report.add("  the vanilla sheets covered everything; this font needs no file");
             } else if (font.fromFont() > 0) {
@@ -205,7 +224,11 @@ public final class HudPackCompiler {
         if (!texts.missingChars().isEmpty()) {
             report.add("characters no font could draw: " + summarise(texts.missingChars()));
         }
-        return new Result(compiled, manifest, report);
+        if (!mobBars.isEmpty()) {
+            report.add("mob bars: " + String.join(", ", mobBars.keySet()));
+        }
+        return new Result(compiled, manifest, report,
+            new MobBars(pack.fontId(MOB_BAR_FONT), Map.copyOf(mobBars)));
     }
 
     /**
@@ -261,10 +284,10 @@ public final class HudPackCompiler {
 
         // Blank the boss bar the HUD rides on, so only its title is visible.
         byte[] barSprite = pngBytes(new BufferedImage(
-                BOSS_BAR_SPRITE_WIDTH, BOSS_BAR_SPRITE_HEIGHT, BufferedImage.TYPE_INT_ARGB));
+            BOSS_BAR_SPRITE_WIDTH, BOSS_BAR_SPRITE_HEIGHT, BufferedImage.TYPE_INT_ARGB));
         for (String sprite : List.of("background", "progress")) {
             pack.addFile("assets/minecraft/textures/gui/sprites/boss_bar/"
-                    + options.bossBarColor() + "_" + sprite + ".png", barSprite);
+                + options.bossBarColor() + "_" + sprite + ".png", barSprite);
         }
         writeHiddenVanillaSprites(pack, options);
     }
@@ -280,7 +303,7 @@ public final class HudPackCompiler {
             return;
         }
         byte[] blank = pngBytes(new BufferedImage(
-                BLANK_SPRITE_SIZE, BLANK_SPRITE_SIZE, BufferedImage.TYPE_INT_ARGB));
+            BLANK_SPRITE_SIZE, BLANK_SPRITE_SIZE, BufferedImage.TYPE_INT_ARGB));
         for (VanillaHud element : options.hiddenVanilla()) {
             for (String sprite : element.sprites()) {
                 pack.addFile("assets/minecraft/textures/gui/sprites/" + sprite, blank);
@@ -298,7 +321,7 @@ public final class HudPackCompiler {
     private static void writeShaders(PackBuilder pack, Options options, Encoding.StateTable states) {
         ShaderDialect base = ShaderDialect.forPackFormat(options.minPackFormat());
         pack.addFile(base.vertexShaderPath(),
-                ShaderGen.vertex(base, states, options.hideVanillaLevelText(), options.shaderOffset()));
+            ShaderGen.vertex(base, states, options.hideVanillaLevelText(), options.shaderOffset()));
 
         List<Map<String, Object>> overlays = new ArrayList<>();
         for (ShaderDialect dialect : ShaderDialect.values()) {
@@ -312,8 +335,8 @@ public final class HudPackCompiler {
             }
             String directory = "overlay_" + dialect.id();
             pack.addFile(directory + "/" + dialect.vertexShaderPath(),
-                    ShaderGen.vertex(dialect, states, options.hideVanillaLevelText(),
-                            options.shaderOffset()));
+                ShaderGen.vertex(dialect, states, options.hideVanillaLevelText(),
+                    options.shaderOffset()));
 
             overlays.add(formatRange(from, to, options, directory));
         }
@@ -367,7 +390,7 @@ public final class HudPackCompiler {
         for (Map.Entry<Encoding.RenderState, Integer> entry : states.entries()) {
             Encoding.RenderState state = entry.getKey();
             out.add(new Compiled.State(entry.getValue(),
-                    state.anchorX(), state.anchorY(), state.layer(), state.outline()));
+                state.anchorX(), state.anchorY(), state.layer(), state.outline()));
         }
         return out;
     }
@@ -414,7 +437,7 @@ public final class HudPackCompiler {
         Model.ImageDef def = model.images().get(element.name());
         if (def == null) {
             throw new IllegalStateException("image not found: " + element.name()
-                    + " (referenced by layout " + layout.key() + ")");
+                + " (referenced by layout " + layout.key() + ")");
         }
         int stateId = states.idOf(new Encoding.RenderState(anchorX, anchorY, element.layer(), false));
         int y = (int) Math.round(layout.y() + element.y());
@@ -425,18 +448,18 @@ public final class HudPackCompiler {
             case SINGLE -> {
                 ImageCompiler.Sliced sliced = images.single(def, stateId, y);
                 yield new Layered(element.layer(), new Compiled.Img(def.key(), x,
-                        toGlyphs(sliced.parts()), sliced.cols(), condition));
+                    toGlyphs(sliced.parts()), sliced.cols(), condition));
             }
             case LISTENER -> new Layered(element.layer(), new Compiled.Bar(def.key(), x,
-                    Compiled.normalizeKey(def.listenerValue()),
-                    Compiled.normalizeKey(def.listenerMax()),
-                    toGlyphs(images.listenerFrames(def, stateId, y)), condition));
+                Compiled.normalizeKey(def.listenerValue()),
+                Compiled.normalizeKey(def.listenerMax()),
+                toGlyphs(images.listenerFrames(def, stateId, y)), condition));
             case FOLLOW -> {
                 Map<String, Compiled.Glyph> children = new LinkedHashMap<>();
                 images.followChildren(def, stateId, y)
-                        .forEach((key, glyph) -> children.put(key, toGlyph(glyph)));
+                    .forEach((key, glyph) -> children.put(key, toGlyph(glyph)));
                 yield new Layered(element.layer(), new Compiled.Follow(def.key(), x,
-                        Compiled.normalizeKey(def.followPlaceholder()), children, condition));
+                    Compiled.normalizeKey(def.followPlaceholder()), children, condition));
             }
         };
     }
@@ -447,13 +470,13 @@ public final class HudPackCompiler {
         Model.HeadDef def = model.heads().get(element.name());
         if (def == null) {
             throw new IllegalStateException("head not found: " + element.name()
-                    + " (referenced by layout " + layout.key() + ")");
+                + " (referenced by layout " + layout.key() + ")");
         }
         int stateId = states.idOf(new Encoding.RenderState(anchorX, anchorY, element.layer(), false));
         int y = (int) Math.round(layout.y() + element.y());
         ImageCompiler.HeadGlyphs glyphs = images.head(def, stateId, y);
         return new Layered(element.layer(), new Compiled.Head(def.key(), layout.x() + element.x(),
-                glyphs.pixel(), glyphs.pixelAdvance(), glyphs.rowCps()));
+            glyphs.pixel(), glyphs.pixelAdvance(), glyphs.rowCps()));
     }
 
     private static Layered compileCompass(Model.LayoutCompass element, Model.LayoutDef layout,
@@ -463,10 +486,10 @@ public final class HudPackCompiler {
         Model.CompassDef def = model.compasses().get(element.name());
         if (def == null) {
             throw new IllegalStateException("compass not found: " + element.name()
-                    + " (referenced by layout " + layout.key() + ")");
+                + " (referenced by layout " + layout.key() + ")");
         }
         int stateId = states.idOf(new Encoding.RenderState(
-                anchorX, anchorY, element.layer(), element.outline() > 0));
+            anchorX, anchorY, element.layer(), element.outline() > 0));
         int y = (int) Math.round(layout.y() + element.y());
 
         Compiled.CompassDist dist = null;
@@ -474,8 +497,8 @@ public final class HudPackCompiler {
             dist = compileDistanceText(def, element, layout, model, states, texts, anchorX, anchorY);
         }
         Compiled.CompassEl compiled = compasses.element(def,
-                layout.key() + "_compass_" + element.name(),
-                layout.x() + element.x(), element.outline() > 0, stateId, y, dist);
+            layout.key() + "_compass_" + element.name(),
+            layout.x() + element.x(), element.outline() > 0, stateId, y, dist);
         return new Layered(element.layer(), compiled);
     }
 
@@ -493,13 +516,13 @@ public final class HudPackCompiler {
         Model.TextFontDef font = model.textFonts().get(distDef.font());
         if (font == null) {
             throw new IllegalStateException("compass " + def.key()
-                    + ": distance-text font not found: " + distDef.font());
+                + ": distance-text font not found: " + distDef.font());
         }
         int stateId = states.idOf(new Encoding.RenderState(
-                anchorX, anchorY, element.layer(), distDef.outline() > 0));
+            anchorX, anchorY, element.layer(), distDef.outline() > 0));
         Model.LayoutText synthetic = new Model.LayoutText(
-                "compass_distance", "", 0, 0, distDef.scale(),
-                distDef.color(), "left", distDef.outline(), element.layer(), null, null);
+            "compass_distance", "", 0, 0, distDef.scale(),
+            distDef.color(), "left", distDef.outline(), element.layer(), null, null);
         int y = (int) Math.round(layout.y() + element.y() + distDef.y());
 
         TextCompiler.TextGlyphs glyphs = texts.element(font, synthetic, stateId, y);
@@ -507,8 +530,8 @@ public final class HudPackCompiler {
         glyphs.glyphs().forEach((ch, value) -> mapped.put(ch, new Compiled.Glyph(value[0], value[1])));
 
         return new Compiled.CompassDist(distDef.x(), distDef.focus(),
-                Compiled.parseColor(distDef.color()), distDef.outline() > 0,
-                distDef.suffix(), glyphs.spaceAdvance(), mapped);
+            Compiled.parseColor(distDef.color()), distDef.outline() > 0,
+            distDef.suffix(), glyphs.spaceAdvance(), mapped);
     }
 
     private static Layered compileText(Model.LayoutText element, int index, Model.LayoutDef layout,
@@ -517,19 +540,19 @@ public final class HudPackCompiler {
         Model.TextFontDef def = model.textFonts().get(element.name());
         if (def == null) {
             throw new IllegalStateException("font not found: " + element.name()
-                    + " (referenced by layout " + layout.key() + ")");
+                + " (referenced by layout " + layout.key() + ")");
         }
         int stateId = states.idOf(new Encoding.RenderState(
-                anchorX, anchorY, element.layer(), element.outline() > 0));
+            anchorX, anchorY, element.layer(), element.outline() > 0));
         int y = (int) Math.round(layout.y() + element.y());
 
         TextCompiler.TextGlyphs compiled = texts.element(def, element, stateId, y);
         Map<Integer, Compiled.Glyph> glyphs = new LinkedHashMap<>();
         compiled.glyphs().forEach((ch, value) ->
-                glyphs.put(ch.codePointAt(0), new Compiled.Glyph(value[0], value[1])));
+            glyphs.put(ch.codePointAt(0), new Compiled.Glyph(value[0], value[1])));
 
         String colorByKey = element.colorByKey() == null
-                ? null : Compiled.normalizeKey(element.colorByKey());
+            ? null : Compiled.normalizeKey(element.colorByKey());
         Map<String, Integer> colorBy = null;
         if (colorByKey != null && element.colorByMap() != null) {
             colorBy = new LinkedHashMap<>();
@@ -540,10 +563,10 @@ public final class HudPackCompiler {
         }
 
         return new Layered(element.layer(), new Compiled.Text(
-                layout.key() + "_text_" + index, layout.x() + element.x(),
-                element.align(), Compiled.parseColor(element.color()), element.outline() > 0,
-                compiled.spaceAdvance(), compiled.height(),
-                Compiled.parsePattern(element.pattern()), glyphs, colorByKey, colorBy));
+            layout.key() + "_text_" + index, layout.x() + element.x(),
+            element.align(), Compiled.parseColor(element.color()), element.outline() > 0,
+            compiled.spaceAdvance(), compiled.height(),
+            Compiled.parsePattern(element.pattern()), glyphs, colorByKey, colorBy));
     }
 
     private static List<Compiled.Glyph> toGlyphs(List<ImageCompiler.Glyph> source) {
@@ -566,7 +589,7 @@ public final class HudPackCompiler {
         manifest.put("namespace", pack.namespace());
         manifest.put("hudFont", pack.hudFont());
         manifest.put("space", Map.of("font", pack.spaceFont(),
-                "base", pack.spaceBase(), "range", pack.spaceRange()));
+            "base", pack.spaceBase(), "range", pack.spaceRange()));
         manifest.put("bossBarColor", pack.bossBarColor());
 
         List<Map<String, Object>> states = new ArrayList<>();
@@ -657,7 +680,7 @@ public final class HudPackCompiler {
 
                 Map<String, List<Integer>> glyphs = new LinkedHashMap<>();
                 e.glyphs().forEach((cp, glyph) -> glyphs.put(
-                        new String(Character.toChars(cp)), List.of(glyph.cp(), glyph.width())));
+                    new String(Character.toChars(cp)), List.of(glyph.cp(), glyph.width())));
                 json.put("glyphs", glyphs);
             }
         }
@@ -689,8 +712,8 @@ public final class HudPackCompiler {
         int limit = 30;
         String sample = characters.stream().limit(limit).collect(Collectors.joining());
         return characters.size() <= limit
-                ? sample
-                : sample + " ... and " + (characters.size() - limit) + " more";
+            ? sample
+            : sample + " ... and " + (characters.size() - limit) + " more";
     }
 
     private static byte[] pngBytes(BufferedImage image) {

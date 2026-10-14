@@ -52,6 +52,7 @@ public final class ModelValidator {
         checkImages(model, problems);
         checkFonts(model, problems);
         checkCompasses(model, problems);
+        checkMobBars(model, problems);
         return problems;
     }
 
@@ -245,6 +246,27 @@ public final class ModelValidator {
             }
         }
         checkUnusedFontFiles(model, problems);
+    }
+
+    private static void checkMobBars(Model.Root model, List<Problem> problems) {
+        for (Model.MobBarDef bar : model.mobBars().values()) {
+            String where = "mobbars/" + bar.key();
+            if (bar.image() == null) {
+                problems.add(error(where, "has no image"));
+                continue;
+            }
+            Model.ImageDef image = model.images().get(bar.image());
+            if (image == null) {
+                problems.add(error(where, "refers to image \"" + bar.image() + "\", which no file in "
+                    + "images/ defines" + suggest(bar.image(), model.images().keySet())));
+            } else if (image.type() != Model.ImageType.LISTENER) {
+                problems.add(error(where, "uses image \"" + bar.image() + "\", which is not a listener; "
+                    + "a mob bar needs a bar sliced into steps"));
+            }
+            if (bar.scale() <= 0) {
+                problems.add(error(where, "has scale " + bar.scale() + "; it must be greater than zero"));
+            }
+        }
     }
 
     /**

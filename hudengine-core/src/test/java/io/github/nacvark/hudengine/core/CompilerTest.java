@@ -98,6 +98,19 @@ class CompilerTest {
         assertTrue(text.glyphs().containsKey((int) 'т'), "every character of it, not just the first");
     }
 
+    @Test
+    void compilesMobBarsIntoAFontTheShaderLeavesAlone(@TempDir Path out) throws IOException {
+        HudPackCompiler.MobBars bars = compile(out).mobBars();
+
+        assertEquals("hudengine:mobbar", bars.font());
+        assertEquals(20, bars.bars().get("health").frames().size());
+
+        // Shader chỉ đụng glyph có ascent mã hóa (âm rất lớn). Thanh gắn trên thực thể mà dính
+        // ascent đó thì sẽ bị đẩy ra ngoài màn hình.
+        String font = Files.readString(out.resolve("pack/assets/hudengine/font/mobbar.json"));
+        assertFalse(font.contains("\"ascent\":-"), font);
+    }
+
     private static void copyDirectory(Path source, Path target) throws IOException {
         try (var files = Files.walk(source)) {
             for (Path path : files.toList()) {

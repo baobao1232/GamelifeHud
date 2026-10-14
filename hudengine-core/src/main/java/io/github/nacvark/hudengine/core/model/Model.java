@@ -58,6 +58,10 @@ public final class Model {
     ) {
     }
 
+    /** Thanh máu gắn trên đầu thực thể. {@code image} là key một ảnh listener trong images/. */
+    public record MobBarDef(String key, String image, double scale, double offset) {
+    }
+
     /**
      * @param scale        glyph height in pixels at layout scale 1
      * @param mergeDefault draw vanilla bitmap glyphs first and let the TTF fill in the rest
@@ -154,6 +158,7 @@ public final class Model {
             Map<String, LayoutDef> layouts,
             Map<String, HudDef> huds,
             Map<String, CompassDef> compasses,
+            Map<String, MobBarDef> mobBars,
             Path assetsDir,
             Path fontsDir,
             Path vanillaDir
@@ -169,6 +174,8 @@ public final class Model {
         Map<String, LayoutDef> layouts = new LinkedHashMap<>();
         Map<String, HudDef> huds = new LinkedHashMap<>();
         Map<String, CompassDef> compasses = new LinkedHashMap<>();
+        Map<String, MobBarDef> mobBars = new LinkedHashMap<>();
+
 
         for (ConfigNode root : readAll(folder.resolve("images"))) {
             root.asMap().forEach((key, node) -> put(images, key, parseImage(key, node), "images", log));
@@ -196,9 +203,16 @@ public final class Model {
             root.asMap().forEach((key, node) ->
                     put(compasses, key, parseCompass(key, node, log), "compasses", log));
         }
+        for (ConfigNode root : readAll(folder.resolve("mobbars"))) {
+            root.asMap().forEach((key, node) -> put(mobBars, key, new MobBarDef(
+                key,
+                node.str("image", null),
+                node.dbl("scale", 0.3),
+                node.dbl("offset", 0.3)), "mobbars", log));
+        }
 
-        return new Root(images, textFonts, heads, layouts, huds, compasses,
-                folder.resolve("assets"), folder.resolve("fonts"), folder.resolve("vanilla"));
+        return new Root(images, textFonts, heads, layouts, huds, compasses, mobBars,
+            folder.resolve("assets"), folder.resolve("fonts"), folder.resolve("vanilla"));
     }
 
     private static List<ConfigNode> readAll(Path dir) throws IOException {

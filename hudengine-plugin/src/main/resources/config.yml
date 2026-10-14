@@ -233,3 +233,16 @@ compass:
   # true = chỉ tính X và Z.
   # false = tính cả X, Y và Z.
   flat-radius: true
+
+# Thanh máu trên đầu player và mob. Hiện khi người chơi gây sát thương, ẩn sau show-seconds.
+# Cần ít nhất một file trong mobbars/ (xem starter HUD).
+mob-bars:
+  enabled: true
+  bar: health        # key trong mobbars/; không có thì tự hiện chữ ❤ hp/max
+  text-only: false   # true = luôn hiện chữ, kể cả khi đã có PNG (để thử)
+  look: true         # nhìn vào mob là hiện, không cần đánh
+  mobs: true
+  players: true
+  show-seconds: 3
+  blacklist:
+    - ARMOR_STAND

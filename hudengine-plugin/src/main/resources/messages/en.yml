@@ -45,6 +45,8 @@ console:
   extra-pack-bad-url: "resource-pack.extra-packs: \"{url}\" không phải URL hợp lệ, đang bỏ qua"
   host-started: "Đang cung cấp resource pack tại {url}"
   host-failed: "Không thể khởi động máy chủ resource pack tại {bind}:{port}, vì vậy resource pack sẽ không được gửi: {error}"
+  mob-bar-unknown: "mob-bars.bar \"{bar}\" không có trong mobbars/. Các thanh hiện có: {known}"
+  mob-bar-bad-type: "mob-bars.blacklist: \"{type}\" không phải EntityType, bỏ qua"
 
 pack:
   kick-default: "&cServer này yêu cầu resource pack.&f Hãy chấp nhận resource pack để chơi tại đây."
