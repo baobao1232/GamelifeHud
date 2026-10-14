@@ -1,10 +1,8 @@
-# GamelifeHealthBar - standalone plugin; does not depend on HUDEngine/GamelifeHUD.
+# GamelifeHealthBar - standalone plugin, no HUDEngine dependency.
 enabled: true
 mobs: true
 players: true
-# Show the bar when the target takes damage.
 show-on-damage: true
-# Also show while the player is looking at a living entity.
 show-on-look: true
 show-seconds: 3
 look-distance: 20.0
@@ -13,14 +11,3 @@ offset: 0.35
 scale: 1.0
 blacklist:
   - ARMOR_STAND
-
-resource-pack:
-  enabled: true
-  send-on-join: true
-  required: false
-  # The URL players can reach from outside the server. Change this to your public IP/domain.
-  public-url: "http://YOUR_SERVER_IP:12001/healthbar.zip"
-  bind: "0.0.0.0"
-  port: 12001
-  path: "/healthbar.zip"
-  prompt: "GamelifeHealthBar resource pack"
