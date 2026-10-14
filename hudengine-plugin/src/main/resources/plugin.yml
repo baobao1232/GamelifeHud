@@ -1,9 +1,9 @@
-name: HUDEngine
+name: GamelifeHUD
 version: '${project.version}'
 main: io.github.nacvark.hudengine.paper.HudEnginePlugin
 api-version: '1.21'
-authors: [Nacvark]
-description: Server-side HUD engine. Compiles declarative configs into a resource pack and renders through the boss bar.
+authors: [Gamelife Studio]
+description: Hệ thống HUD phía máy chủ, biên dịch cấu hình thành resource pack và hiển thị thông qua thanh bossbar.
 website: https://github.com/Nacvark/HUDEngine
 folia-supported: true
 
@@ -11,27 +11,27 @@ softdepend: [PlaceholderAPI]
 
 commands:
   hudengine:
-    description: Show, hide and reload HUDs
+    description: Quản lý HUD của người chơi
     usage: /hudengine toggle [player] | show <hud> [player] | hide <hud> [player] | reset [player] | list [player] | reload
     aliases: [hud]
 
 permissions:
   hudengine.*:
-    description: Everything HUDEngine offers
+    description: Toàn bộ quyền của GamelifeHUD
     default: op
     children:
       hudengine.admin: true
       hudengine.command.*: true
 
   hudengine.admin:
-    description: Reload the configuration and act on other players' HUDs
+    description: Tải lại cấu hình và quản lý HUD của người chơi khác
     default: op
     children:
       hudengine.command.reload: true
       hudengine.command.others: true
 
   hudengine.command.*:
-    description: Every HUDEngine command
+    description: Toàn bộ lệnh của GamelifeHUD
     default: op
     children:
       hudengine.command.toggle: true
@@ -43,23 +43,29 @@ permissions:
       hudengine.command.others: true
 
   hudengine.command.toggle:
-    description: Turn your own HUD on and off
+    description: Bật hoặc tắt HUD của bạn
     default: op
+
   hudengine.command.show:
-    description: Show yourself a specific HUD
+    description: Hiển thị một HUD cụ thể cho bạn
     default: op
+
   hudengine.command.hide:
-    description: Hide a specific HUD from yourself
+    description: Ẩn một HUD cụ thể của bạn
     default: op
+
   hudengine.command.reset:
-    description: Return yourself to the default set of HUDs
+    description: Khôi phục danh sách HUD mặc định của bạn
     default: op
+
   hudengine.command.list:
-    description: List the compiled HUDs
+    description: Hiển thị danh sách các HUD đã biên dịch
     default: op
+
   hudengine.command.reload:
-    description: Recompile the configuration
+    description: Biên dịch lại cấu hình HUD
     default: op
+
   hudengine.command.others:
-    description: Act on another player's HUD instead of your own
+    description: Quản lý HUD của người chơi khác
     default: op

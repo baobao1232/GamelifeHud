@@ -1,42 +1,28 @@
-HUDEngine starter HUD
-=====================
+# HUD mẫu của GamelifeHUD
 
-This folder was written on first start so the plugin does something out of the box.
-It is an example, not a recommendation: delete anything you do not want.
+Thư mục này được tạo trong lần khởi động đầu tiên để plugin có thể hoạt động ngay mà không cần cấu hình thêm.
+Đây chỉ là một ví dụ, không phải cấu hình bắt buộc: hãy xóa những thứ bạn không cần.
 
-  status    the player's face, a health bar and a hunger bar, top left
-  coords    coordinates and facing, bottom centre
-  compass   a compass ribbon, top centre
+status    khuôn mặt người chơi, thanh máu và thanh đói, ở góc trên bên trái
+coords    tọa độ và hướng nhìn, ở giữa phía dưới
+compass   thanh la bàn, ở giữa phía trên
 
-Everything it draws comes from values the engine resolves on its own, so it works
-with no other plugin installed. The text uses the vanilla font that ships inside the
-plugin, so no font file is needed either.
+Mọi thứ được hiển thị đều lấy từ các giá trị mà engine tự xử lý, vì vậy HUD có thể hoạt động mà không cần cài thêm plugin nào khác. Phần chữ sử dụng font mặc định của Minecraft được tích hợp sẵn trong plugin, nên cũng không cần thêm file font.
 
-Edit and run /hudengine reload. Positions and text update at once; new images, fonts
-or moved elements need players to rejoin, because that is when a client picks up a
-new pack.
+Chỉnh sửa cấu hình rồi chạy /hudengine reload. Vị trí và nội dung chữ sẽ được cập nhật ngay lập tức; các hình ảnh, font mới hoặc các thành phần được di chuyển sẽ yêu cầu người chơi vào lại server, vì đó là lúc client nhận resource pack mới.
 
-To start over, delete this folder and restart. To keep it from coming back, set
-starter-hud: false in config.yml.
+Để bắt đầu lại từ đầu, hãy xóa thư mục này rồi khởi động lại server. Nếu không muốn thư mục này tự xuất hiện lại, đặt starter-hud: false trong config.yml.
 
+# HUD mẫu của HUDEngine
 
-HUDEngine, стартовый HUD
-========================
+Thư mục này được tạo trong lần khởi động đầu tiên để plugin có thể hoạt động ngay. Đây chỉ là một ví dụ, không phải cấu hình được khuyến nghị: hãy xóa mọi thứ bạn không cần.
 
-Эта папка записана при первом запуске, чтобы плагин что-то делал сразу. Это пример,
-а не рекомендация: удаляйте всё, что не нужно.
+status    khuôn mặt người chơi, thanh máu và thanh đói, ở góc trên bên trái
+coords    tọa độ và hướng nhìn, ở giữa phía dưới
+compass   thanh la bàn, ở giữa phía trên
 
-  status    лицо игрока, полоса здоровья и полоса голода, слева вверху
-  coords    координаты и направление, внизу по центру
-  compass   лента компаса, вверху по центру
+Mọi thứ được hiển thị đều do engine tự lấy từ các giá trị của nó, vì vậy HUD hoạt động mà không cần bất kỳ plugin bên thứ ba nào. Phần chữ sử dụng font mặc định của Minecraft được tích hợp trong plugin, nên cũng không cần file font.
 
-Всё, что он рисует, движок берёт из своих значений, поэтому HUD работает без единого
-стороннего плагина. Текст использует ванильный шрифт, лежащий внутри плагина, так что
-файл шрифта тоже не нужен.
+Chỉnh sửa rồi chạy /hudengine reload. Vị trí và nội dung chữ sẽ cập nhật ngay; hình ảnh, font mới và các thành phần được di chuyển sẽ yêu cầu người chơi vào lại server, vì khi đó client mới nhận resource pack mới.
 
-Правьте и выполняйте /hudengine reload. Позиции и текст обновятся сразу; новые
-картинки, шрифты и перемещённые элементы требуют перезахода игроков - именно тогда
-клиент получает новый пак.
-
-Чтобы начать заново, удалите эту папку и перезапустите сервер. Чтобы она больше не
-появлялась, поставьте starter-hud: false в config.yml.
+Để bắt đầu lại, hãy xóa thư mục này và khởi động lại server. Nếu không muốn nó xuất hiện lại, đặt starter-hud: false trong config.yml.

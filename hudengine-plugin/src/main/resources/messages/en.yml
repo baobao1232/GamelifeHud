@@ -1,73 +1,74 @@
-# HUDEngine messages, English.
+# HUDEngine messages, Vietnamese.
 #
-# Copy this file to messages.yml in the plugin folder to override any of it.
-# Anything you leave out falls back to the text below, so an override file may
-# contain only the lines you want to change.
+# Sao chép file này thành messages.yml trong thư mục plugin
+# để ghi đè các nội dung bên dưới.
+# Những dòng không khai báo sẽ tự động sử dụng nội dung mặc định.
 #
-# Colour is deliberately sparse: the prefix, words that name a state, and
-# failures. Everything else stays white so the eye lands on what changed.
+# Màu sắc được sử dụng tối giản: prefix, các từ thể hiện trạng thái
+# và thông báo lỗi. Những phần còn lại giữ màu trắng để dễ nhìn.
 #
-# Formatting uses legacy codes: &a green, &f white, &c red, &e yellow, &7 grey.
-# Values in braces are filled in by the plugin.
+# Định dạng sử dụng mã màu cũ:
+# &a xanh lá, &f trắng, &c đỏ, &e vàng, &7 xám.
+# Các giá trị trong dấu ngoặc nhọn sẽ được plugin tự động điền.
 
-prefix: "&a[HUDEngine]&f "
+prefix: "&a[GamelifeHUD]&f "
 
 console:
-  disabled: "Disabled in config.yml"
-  compiled: "Pack built in {ms} ms into {path}"
-  running: "Running with HUDs: {huds}"
-  compile-failed: "&cCompilation failed.&f The HUD is not running."
-  reload-failed: "&cReload failed.&f The previously loaded HUD is still running."
-  no-huds: "No HUDs were compiled. Put your huds/, layouts/ and images/ folders next to config.yml"
-  papi-found: "PlaceholderAPI found, papi: keys are available"
-  papi-missing: "A HUD uses papi: placeholders but PlaceholderAPI is not installed, so those values will be blank"
-  skins-offline: "Players here carry no skin texture. Head elements will draw the built-in face."
-  shadow-unsupported: "This server predates per-component shadow control (client 1.21.4), so HUD images and heads will be drawn with the vanilla text shadow."
-  glyph-missing: "No glyph for {codepoint} ('{character}'). Add its language to the font's include list."
-  unknown-default-hud: "huds.default lists \"{hud}\", which no config compiled. Ignoring it."
-  starter-written: "Wrote a starter HUD into {path}. Edit it, or delete the folders and set starter-hud: false to stop it coming back. See README.txt."
-  starter-empty: "This build carries no starter HUD, so none was written"
-  starter-failed: "Could not write the starter HUD: {error}"
-  papi-mismatch: "PlaceholderAPI is installed but its API is not the shape this version of HUDEngine expects, so papi: keys are disabled"
-  skin-failed: "Could not load the skin for {player}, using the fallback face: {error}"
-  tick-failed: "Building the HUD failed for {player}"
-  boss-bar-line-range: "pack.boss-bar-line must be between 1 and {max}, so {value} is being read as {fallback}"
-  level-text-moved: "pack.hide-vanilla-level-text has moved to hide-vanilla-hud.level-text and is being ignored where it is now"
-  unknown-hidden-element: "hide-vanilla-hud: \"{key}\" is not something this engine can hide. Known elements: {known}"
-  points-unreadable: "Could not read compass points from {path}: {error}"
-  compass-provider-failed: "Compass point provider \"{id}\" failed: {error}"
-  delivery-unknown: "resource-pack.delivery is \"{value}\", which is not none, url or host; treating it as none"
-  pack-missing: "The built pack is missing at {path}, so delivery is disabled"
-  pack-unreadable: "Could not read the built pack for delivery: {error}"
-  extra-pack-not-a-map: "resource-pack.extra-packs: every entry must be a map with url and hash"
-  extra-pack-no-url: "resource-pack.extra-packs: an entry has no url, skipping it"
-  extra-pack-bad-url: "resource-pack.extra-packs: \"{url}\" is not a valid URL, skipping it"
-  host-started: "Serving the resource pack on {url}"
-  host-failed: "Could not start the pack host on {bind}:{port}, so the pack will not be delivered: {error}"
+  disabled: "Đã tắt trong config.yml"
+  compiled: "Đã tạo resource pack trong {ms} ms tại {path}"
+  running: "Đang chạy với các HUD: {huds}"
+  compile-failed: "&cBiên dịch thất bại.&f HUD không được khởi chạy."
+  reload-failed: "&cTải lại thất bại.&f HUD trước đó vẫn đang hoạt động."
+  no-huds: "Không có HUD nào được biên dịch. Hãy đặt các thư mục huds/, layouts/ và images/ bên cạnh config.yml"
+  papi-found: "Đã tìm thấy PlaceholderAPI, các key papi: hiện đã khả dụng"
+  papi-missing: "HUD đang sử dụng placeholder papi: nhưng PlaceholderAPI chưa được cài đặt, vì vậy các giá trị này sẽ để trống"
+  skins-offline: "Người chơi tại đây không có dữ liệu skin. Các phần đầu sẽ sử dụng khuôn mặt mặc định."
+  shadow-unsupported: "Server này không hỗ trợ điều khiển đổ bóng riêng cho từng thành phần (client 1.21.4), vì vậy hình ảnh và phần đầu trong HUD sẽ sử dụng đổ bóng chữ mặc định của Minecraft."
+  glyph-missing: "Không có glyph cho {codepoint} ('{character}'). Hãy thêm ngôn ngữ tương ứng vào danh sách include của font."
+  unknown-default-hud: "huds.default chứa \"{hud}\", nhưng HUD này không được biên dịch. Bỏ qua."
+  starter-written: "Đã tạo HUD mẫu tại {path}. Hãy chỉnh sửa hoặc xóa các thư mục và đặt starter-hud: false để ngăn HUD mẫu xuất hiện lại. Xem README.txt."
+  starter-empty: "Bản build này không có HUD mẫu nên không có gì được tạo."
+  starter-failed: "Không thể tạo HUD mẫu: {error}"
+  papi-mismatch: "PlaceholderAPI đã được cài đặt nhưng API của nó không tương thích với phiên bản HUDEngine này, vì vậy các key papi: đã bị vô hiệu hóa"
+  skin-failed: "Không thể tải skin của {player}, đang sử dụng khuôn mặt mặc định: {error}"
+  tick-failed: "Không thể tạo HUD cho {player}"
+  boss-bar-line-range: "pack.boss-bar-line phải nằm trong khoảng từ 1 đến {max}, vì vậy {value} sẽ được sử dụng dưới dạng {fallback}"
+  level-text-moved: "pack.hide-vanilla-level-text đã được chuyển sang hide-vanilla-hud.level-text và sẽ bị bỏ qua tại vị trí hiện tại"
+  unknown-hidden-element: "hide-vanilla-hud: \"{key}\" không phải là thành phần mà engine này có thể ẩn. Các thành phần được hỗ trợ: {known}"
+  points-unreadable: "Không thể đọc các hướng la bàn từ {path}: {error}"
+  compass-provider-failed: "Bộ cung cấp hướng la bàn \"{id}\" gặp lỗi: {error}"
+  delivery-unknown: "resource-pack.delivery đang là \"{value}\", giá trị này không phải none, url hoặc host; sẽ xử lý như none"
+  pack-missing: "Không tìm thấy resource pack đã tạo tại {path}, vì vậy việc gửi pack đã bị vô hiệu hóa"
+  pack-unreadable: "Không thể đọc resource pack đã tạo để gửi cho người chơi: {error}"
+  extra-pack-not-a-map: "resource-pack.extra-packs: mỗi mục phải là một map chứa url và hash"
+  extra-pack-no-url: "resource-pack.extra-packs: một mục không có url, đang bỏ qua"
+  extra-pack-bad-url: "resource-pack.extra-packs: \"{url}\" không phải URL hợp lệ, đang bỏ qua"
+  host-started: "Đang cung cấp resource pack tại {url}"
+  host-failed: "Không thể khởi động máy chủ resource pack tại {bind}:{port}, vì vậy resource pack sẽ không được gửi: {error}"
 
 pack:
-  kick-default: "&cThis server needs its resource pack.&f Accept it to play here."
+  kick-default: "&cServer này yêu cầu resource pack.&f Hãy chấp nhận resource pack để chơi tại đây."
 
 command:
-  not-running: "&cThe HUD engine is not running.&f Check the console for what went wrong."
-  player-only: "Name a player, or run this as one."
-  player-not-found: "&cNo player named \"{player}\" is online."
-  no-permission: "&cYou do not have permission to do that."
-  no-permission-others: "&cYou may only change your own HUD."
+  not-running: "&cHUD engine hiện không hoạt động.&f Hãy kiểm tra console để biết nguyên nhân."
+  player-only: "Hãy nhập tên người chơi hoặc thực hiện lệnh này với tư cách người chơi."
+  player-not-found: "&cKhông tìm thấy người chơi có tên \"{player}\" đang online."
+  no-permission: "&cBạn không có quyền thực hiện thao tác này."
+  no-permission-others: "&cBạn chỉ có thể thay đổi HUD của chính mình."
   usage: "&7/{label} toggle [player] | show <hud> [player] | hide <hud> [player] | reset [player] | list [player] | reload"
-  usage-hud: "&7Usage: /{label} {sub} <hud> [player]"
-  shown: "HUD is now &ashown&f."
-  hidden: "HUD is now &7hidden&f."
-  shown-other: "HUD is now &ashown&f for {player}."
-  hidden-other: "HUD is now &7hidden&f for {player}."
-  hud-shown: "HUD \"{hud}\" is now &ashown&f."
-  hud-hidden: "HUD \"{hud}\" is now &7hidden&f."
-  hud-shown-other: "HUD \"{hud}\" is now &ashown&f for {player}."
-  hud-hidden-other: "HUD \"{hud}\" is now &7hidden&f for {player}."
-  hud-unknown: "&cNo HUD named \"{hud}\".&f Available: {huds}"
-  reset: "HUD set back to the default."
-  reset-other: "HUD set back to the default for {player}."
-  list-compiled: "Compiled: {huds}"
-  list-visible: "Visible to {player}: {huds}"
-  reloaded: "Recompiled. If images, fonts or positions changed, players need to rejoin to pick up the new pack."
-  reload-error: "Compilation failed. {error}"
+  usage-hud: "&7Cách dùng: /{label} {sub} <hud> [player]"
+  shown: "HUD đã được &ahiển thị&f."
+  hidden: "HUD đã được &7ẩn&f."
+  shown-other: "HUD đã được &ahiển thị&f cho {player}."
+  hidden-other: "HUD đã được &7ẩn&f cho {player}."
+  hud-shown: "HUD \"{hud}\" đã được &ahiển thị&f."
+  hud-hidden: "HUD \"{hud}\" đã được &7ẩn&f."
+  hud-shown-other: "HUD \"{hud}\" đã được &ahiển thị&f cho {player}."
+  hud-hidden-other: "HUD \"{hud}\" đã được &7ẩn&f cho {player}."
+  hud-unknown: "&cKhông tìm thấy HUD có tên \"{hud}\".&f Các HUD hiện có: {huds}"
+  reset: "HUD đã được khôi phục về mặc định."
+  reset-other: "HUD của {player} đã được khôi phục về mặc định."
+  list-compiled: "Đã biên dịch: {huds}"
+  list-visible: "HUD hiển thị cho {player}: {huds}"
+  reloaded: "Đã biên dịch lại. Nếu hình ảnh, font hoặc vị trí đã thay đổi, người chơi cần vào lại server để nhận resource pack mới."
+  reload-error: "Biên dịch thất bại. {error}"
