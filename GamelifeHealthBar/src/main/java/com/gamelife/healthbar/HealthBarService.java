@@ -1,5 +1,6 @@
 package com.gamelife.healthbar;
 
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -30,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 final class HealthBarService implements Listener {
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
+    private static final Key BAR_FONT = Key.key("gamelifehealthbar", "healthbar");
     private final GamelifeHealthBarPlugin plugin;
     private final Map<UUID, Bar> bars = new ConcurrentHashMap<>();
     private final Map<UUID, BukkitTask> lookTasks = new ConcurrentHashMap<>();
@@ -62,7 +64,6 @@ final class HealthBarService implements Listener {
         HandlerList.unregisterAll(this);
         lookTasks.values().forEach(BukkitTask::cancel);
         lookTasks.clear();
-        bars.keySet().toArray(UUID[]::new);
         for (UUID id : bars.keySet().toArray(UUID[]::new)) removeBar(id);
     }
 
@@ -130,9 +131,7 @@ final class HealthBarService implements Listener {
             var hit = player.getWorld().rayTraceEntities(player.getEyeLocation(),
                 player.getEyeLocation().getDirection(), lookDistance, 0.2,
                 entity -> entity instanceof LivingEntity && !entity.equals(player));
-            if (hit != null && hit.getHitEntity() instanceof LivingEntity target && isAllowed(target)) {
-                show(target, player);
-            }
+            if (hit != null && hit.getHitEntity() instanceof LivingEntity target && isAllowed(target)) show(target, player);
         }, 1L, updateTicks);
         lookTasks.put(player.getUniqueId(), task);
     }
@@ -148,7 +147,7 @@ final class HealthBarService implements Listener {
                 d.setBillboard(Display.Billboard.CENTER);
                 d.setDefaultBackground(false);
                 d.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
-                d.setShadowed(true);
+                d.setShadowed(false);
                 d.setLineWidth(200);
                 d.setTransformation(new Transformation(new Vector3f(0, offset, 0),
                     new AxisAngle4f(), new Vector3f(scale), new AxisAngle4f()));
@@ -183,15 +182,15 @@ final class HealthBarService implements Listener {
 
         double max = target.getMaxHealth();
         double health = Math.max(0, Math.min(target.getHealth(), max));
-        int filled = max <= 0 ? 0 : (int) Math.ceil(health / max * 10.0);
-        StringBuilder text = new StringBuilder("§c");
-        for (int i = 0; i < 10; i++) text.append(i < filled ? "▰" : "▱");
-        text.append(" §f").append((int) Math.ceil(health))
-            .append("§7/§f").append((int) Math.ceil(max));
-        String value = text.toString();
-        if (!value.equals(bar.lastText)) {
-            bar.lastText = value;
-            bar.display.text(LEGACY.deserialize(value));
+        int frame = max <= 0 ? 0 : (int) Math.ceil(health / max * 10.0);
+        frame = Math.max(0, Math.min(10, frame));
+        String glyph = String.valueOf((char) (0xE000 + frame));
+        Component text = Component.text(glyph).font(BAR_FONT)
+            .append(Component.text(" " + (int) Math.ceil(health) + "/" + (int) Math.ceil(max)));
+        String cacheKey = frame + ":" + (int) Math.ceil(health) + ":" + (int) Math.ceil(max);
+        if (!cacheKey.equals(bar.lastText)) {
+            bar.lastText = cacheKey;
+            bar.display.text(text);
         }
     }
 
