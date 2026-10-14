@@ -1,0 +1,15 @@
+name: GamelifeHealthBar
+version: '1.0.0'
+main: com.gamelife.healthbar.GamelifeHealthBarPlugin
+api-version: '1.21'
+authors: [Gamelife Studio]
+description: Standalone health bars above mobs and players.
+commands:
+  healthbar:
+    description: Manage GamelifeHealthBar
+    usage: /healthbar reload
+    permission: gamelifehealthbar.admin
+permissions:
+  gamelifehealthbar.admin:
+    description: Reload healthbar configuration
+    default: op
