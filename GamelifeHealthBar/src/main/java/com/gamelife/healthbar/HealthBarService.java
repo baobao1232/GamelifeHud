@@ -1,5 +1,7 @@
 package com.gamelife.healthbar;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.entity.Display;
@@ -27,20 +29,15 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 final class HealthBarService implements Listener {
+    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
     private final GamelifeHealthBarPlugin plugin;
     private final Map<UUID, Bar> bars = new ConcurrentHashMap<>();
     private final Map<UUID, BukkitTask> lookTasks = new ConcurrentHashMap<>();
 
-    private volatile boolean enabled;
-    private volatile boolean showMobs;
-    private volatile boolean showPlayers;
-    private volatile boolean showOnDamage;
-    private volatile boolean showOnLook;
-    private volatile int showSeconds;
-    private volatile int updateTicks;
+    private volatile boolean enabled, showMobs, showPlayers, showOnDamage, showOnLook;
+    private volatile int showSeconds, updateTicks;
     private volatile double lookDistance;
-    private volatile float offset;
-    private volatile float scale;
+    private volatile float offset, scale;
     private volatile Set<String> blacklist;
 
     private static final class Bar {
@@ -48,10 +45,7 @@ final class HealthBarService implements Listener {
         private final Map<UUID, Long> viewers = new ConcurrentHashMap<>();
         private BukkitTask task;
         private String lastText = "";
-
-        private Bar(TextDisplay display) {
-            this.display = display;
-        }
+        private Bar(TextDisplay display) { this.display = display; }
     }
 
     HealthBarService(GamelifeHealthBarPlugin plugin) {
@@ -61,30 +55,23 @@ final class HealthBarService implements Listener {
 
     void start() {
         Bukkit.getPluginManager().registerEvents(this, plugin);
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            attachLookTask(player);
-        }
+        Bukkit.getOnlinePlayers().forEach(this::attachLookTask);
     }
 
     void stop() {
         HandlerList.unregisterAll(this);
         lookTasks.values().forEach(BukkitTask::cancel);
         lookTasks.clear();
-        for (UUID id : bars.keySet().toArray(UUID[]::new)) {
-            removeBar(id);
-        }
+        bars.keySet().toArray(UUID[]::new);
+        for (UUID id : bars.keySet().toArray(UUID[]::new)) removeBar(id);
     }
 
     void reloadSettings() {
         loadSettings();
-        for (UUID id : bars.keySet().toArray(UUID[]::new)) {
-            removeBar(id);
-        }
+        for (UUID id : bars.keySet().toArray(UUID[]::new)) removeBar(id);
         lookTasks.values().forEach(BukkitTask::cancel);
         lookTasks.clear();
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            attachLookTask(player);
-        }
+        Bukkit.getOnlinePlayers().forEach(this::attachLookTask);
     }
 
     private void loadSettings() {
@@ -102,26 +89,17 @@ final class HealthBarService implements Listener {
     }
 
     @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
-        attachLookTask(event.getPlayer());
-    }
+    public void onJoin(PlayerJoinEvent event) { attachLookTask(event.getPlayer()); }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDamage(EntityDamageByEntityEvent event) {
-        if (!enabled || !showOnDamage || !(event.getEntity() instanceof LivingEntity target)) {
-            return;
-        }
+        if (!enabled || !showOnDamage || !(event.getEntity() instanceof LivingEntity target)) return;
         Player viewer = findAttackingPlayer(event.getDamager());
-        if (viewer == null || viewer.equals(target) || !isAllowed(target)) {
-            return;
-        }
-        show(target, viewer);
+        if (viewer != null && !viewer.equals(target) && isAllowed(target)) show(target, viewer);
     }
 
     @EventHandler
-    public void onDeath(EntityDeathEvent event) {
-        removeBar(event.getEntity().getUniqueId());
-    }
+    public void onDeath(EntityDeathEvent event) { removeBar(event.getEntity().getUniqueId()); }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
@@ -129,16 +107,12 @@ final class HealthBarService implements Listener {
         BukkitTask task = lookTasks.remove(id);
         if (task != null) task.cancel();
         removeBar(id);
-        for (Bar bar : bars.values()) {
-            bar.viewers.remove(id);
-        }
+        bars.values().forEach(bar -> bar.viewers.remove(id));
     }
 
     private Player findAttackingPlayer(Entity damager) {
         if (damager instanceof Player player) return player;
-        if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player player) {
-            return player;
-        }
+        if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player player) return player;
         return null;
     }
 
@@ -151,17 +125,12 @@ final class HealthBarService implements Listener {
         BukkitTask old = lookTasks.remove(player.getUniqueId());
         if (old != null) old.cancel();
         if (!showOnLook) return;
-
         BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (!enabled || !player.isOnline()) return;
-            var result = player.getWorld().rayTraceEntities(
-                player.getEyeLocation(),
-                player.getEyeLocation().getDirection(),
-                lookDistance,
-                0.2,
-                entity -> entity instanceof LivingEntity && !entity.equals(player)
-            );
-            if (result != null && result.getHitEntity() instanceof LivingEntity target && isAllowed(target)) {
+            var hit = player.getWorld().rayTraceEntities(player.getEyeLocation(),
+                player.getEyeLocation().getDirection(), lookDistance, 0.2,
+                entity -> entity instanceof LivingEntity && !entity.equals(player));
+            if (hit != null && hit.getHitEntity() instanceof LivingEntity target && isAllowed(target)) {
                 show(target, player);
             }
         }, 1L, updateTicks);
@@ -170,8 +139,8 @@ final class HealthBarService implements Listener {
 
     private void show(LivingEntity target, Player viewer) {
         if (!enabled || !target.isValid() || !viewer.isOnline()) return;
-        UUID targetId = target.getUniqueId();
-        Bar bar = bars.get(targetId);
+        UUID id = target.getUniqueId();
+        Bar bar = bars.get(id);
         if (bar == null || !bar.display.isValid()) {
             TextDisplay display = target.getWorld().spawn(target.getLocation(), TextDisplay.class, d -> {
                 d.setVisibleByDefault(false);
@@ -181,16 +150,15 @@ final class HealthBarService implements Listener {
                 d.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                 d.setShadowed(true);
                 d.setLineWidth(200);
-                d.setTransformation(new Transformation(
-                    new Vector3f(0, offset, 0), new AxisAngle4f(),
-                    new Vector3f(scale), new AxisAngle4f()
-                ));
+                d.setTransformation(new Transformation(new Vector3f(0, offset, 0),
+                    new AxisAngle4f(), new Vector3f(scale), new AxisAngle4f()));
             });
             target.addPassenger(display);
             bar = new Bar(display);
-            bars.put(targetId, bar);
-            Bar captured = bar;
-            captured.task = Bukkit.getScheduler().runTaskTimer(plugin, () -> tick(target, captured), 1L, updateTicks);
+            bars.put(id, bar);
+            Bar activeBar = bar;
+            activeBar.task = Bukkit.getScheduler().runTaskTimer(plugin,
+                () -> tick(target, activeBar), 1L, updateTicks);
         }
         bar.viewers.put(viewer.getUniqueId(), System.currentTimeMillis() + showSeconds * 1000L);
         viewer.showEntity(plugin, bar.display);
@@ -201,7 +169,6 @@ final class HealthBarService implements Listener {
             removeBar(target.getUniqueId());
             return;
         }
-
         long now = System.currentTimeMillis();
         bar.viewers.entrySet().removeIf(entry -> {
             if (entry.getValue() > now) return false;
@@ -214,17 +181,17 @@ final class HealthBarService implements Listener {
             return;
         }
 
-        double maxHealth = target.getMaxHealth();
-        double health = Math.max(0, Math.min(target.getHealth(), maxHealth));
-        int filled = maxHealth <= 0 ? 0 : (int) Math.ceil((health / maxHealth) * 10.0);
-        StringBuilder barText = new StringBuilder("§c");
-        for (int i = 0; i < 10; i++) {
-            barText.append(i < filled ? "▰" : "▱");
-        }
-        String text = barText + " §f" + (int) Math.ceil(health) + "§7/§f" + (int) Math.ceil(maxHealth);
-        if (!text.equals(bar.lastText)) {
-            bar.lastText = text;
-            bar.display.text(net.kyori.adventure.text.Component.text(text));
+        double max = target.getMaxHealth();
+        double health = Math.max(0, Math.min(target.getHealth(), max));
+        int filled = max <= 0 ? 0 : (int) Math.ceil(health / max * 10.0);
+        StringBuilder text = new StringBuilder("§c");
+        for (int i = 0; i < 10; i++) text.append(i < filled ? "▰" : "▱");
+        text.append(" §f").append((int) Math.ceil(health))
+            .append("§7/§f").append((int) Math.ceil(max));
+        String value = text.toString();
+        if (!value.equals(bar.lastText)) {
+            bar.lastText = value;
+            bar.display.text(LEGACY.deserialize(value));
         }
     }
 
