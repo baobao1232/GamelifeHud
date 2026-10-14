@@ -1,13 +1,14 @@
 # GamelifeHealthBar
 
-Standalone Paper/Purpur plugin for Minecraft 1.21+ that displays a pixel-art health bar above living entities. It does **not** depend on HUDEngine or GamelifeHUD.
+Standalone Paper/Purpur plugin for Minecraft 1.21.x. It does not depend on HUDEngine, GamelifeHUD, their compiler, or their resource pack.
 
 ## Features
-- Pixel-art bar above mobs and players, based on current/max health.
-- Show on damage and optionally while looking at an entity.
+- Shows a health bar above living entities when a player damages them.
+- Optionally shows a bar when a player looks at an entity.
+- Can display bars for mobs and players separately.
 - Per-viewer visibility and automatic timeout.
-- Configure mobs/players, timeout, look distance, scale, offset, and entity blacklist.
-- Generates its own resource pack and can serve it over HTTP; no HUDEngine pack compiler is used.
+- Configurable look distance, update interval, height offset, scale, and mob blacklist.
+- Uses Minecraft's built-in text glyphs; this initial standalone version does not require or generate a resource pack.
 
 ## Build
 Requires JDK 21 and Maven:
@@ -16,19 +17,10 @@ Requires JDK 21 and Maven:
 mvn clean package
 ```
 
-Copy `target/GamelifeHealthBar.jar` to the server's `plugins/` directory and restart.
+Copy `target/GamelifeHealthBar.jar` to the server's `plugins/` folder and restart.
 
-## Resource pack hosting
-1. Set `resource-pack.public-url` to a URL reachable by players, for example `http://play.example.com:12001/healthbar.zip`.
-2. Open/forward TCP port 12001 to the Minecraft host if the server is behind a router.
-3. Install the plugin and restart. It generates the pack and serves it at the configured path.
-4. Keep `required: false` if players should be allowed to decline the pack.
+## Command
+- `/healthbar reload` — reload configuration (permission: `gamelifehealthbar.admin`, default OP).
 
-The generated pack contains its own bitmap font. It is independent from the HUDEngine resource pack. If another pack overrides the same font namespace (unlikely), resolve the pack order on the client.
-
-## Commands
-- `/healthbar reload` — reload configuration and regenerate the pack (permission: `gamelifehealthbar.admin`).
-
-## Notes
-- Java 21, Paper/Purpur 1.21.x API.
-- The HTTP endpoint serves only the configured ZIP path and supports GET/HEAD.
+## Configuration
+Edit `plugins/GamelifeHealthBar/config.yml`. Set `show-on-damage` or `show-on-look` to `false` to disable either trigger. Add entity type names to `blacklist` to exclude mobs.
