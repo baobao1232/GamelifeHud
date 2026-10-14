@@ -1,4 +1,4 @@
-# GamelifeHealthBar - standalone plugin, no HUDEngine dependency.
+# GamelifeHealthBar - plugin and resource pack are independent from HUDEngine/GamelifeHUD.
 enabled: true
 mobs: true
 players: true
@@ -11,3 +11,17 @@ offset: 0.35
 scale: 1.0
 blacklist:
   - ARMOR_STAND
+
+resource-pack:
+  enabled: true
+  auto-send: true
+  require-pack: false
+  prompt: "GamelifeHealthBar - thanh máu pixel"
+  # Set this to the public URL players can reach. Leave empty to use host.public-url.
+  url: ""
+  host:
+    enabled: true
+    bind: "0.0.0.0"
+    port: 12001
+    path: "/healthbar.zip"
+    public-url: "http://YOUR_SERVER_IP:12001/healthbar.zip"
