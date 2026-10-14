@@ -1,9 +1,9 @@
 name: GamelifeHealthBar
-version: '${project.version}'
+version: '1.0.0'
 main: com.gamelife.healthbar.GamelifeHealthBarPlugin
 api-version: '1.21'
 authors: [Gamelife Studio]
-description: Standalone pixel-art health bars above mobs and players.
+description: Standalone health bars above mobs and players.
 commands:
   healthbar:
     description: Manage GamelifeHealthBar
